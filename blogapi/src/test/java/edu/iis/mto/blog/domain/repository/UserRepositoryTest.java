@@ -40,7 +40,15 @@ class UserRepositoryTest {
         user.setAccountStatus(AccountStatus.NEW);
     }
 
+    @Test
+    void NotFind() {
 
+        int expectedNumberOfResults = 0;
+        entityManager.persist(user);
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(" ", " ", " ");
+
+        assertEquals(expectedNumberOfResults, users.size());
+    }
     @Test
     void shouldFindNoUsersIfRepositoryIsEmpty() {
 
