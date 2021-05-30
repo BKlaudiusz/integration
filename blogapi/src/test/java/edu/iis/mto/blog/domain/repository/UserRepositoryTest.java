@@ -27,16 +27,20 @@ class UserRepositoryTest {
     private UserRepository repository;
 
     private User user;
-
+    private final String name = "aaaaa";
+    private final String email = "aaa@domain.com";
+    private final String dummyValue = "<<No-Name>>";
     @BeforeEach
     void setUp() {
+        repository.deleteAll();
+        repository.flush();
         user = new User();
         user.setFirstName("Jan");
         user.setEmail("john@domain.com");
         user.setAccountStatus(AccountStatus.NEW);
     }
 
-    @Disabled
+
     @Test
     void shouldFindNoUsersIfRepositoryIsEmpty() {
 
@@ -45,10 +49,9 @@ class UserRepositoryTest {
         assertThat(users, hasSize(0));
     }
 
-    @Disabled
     @Test
     void shouldFindOneUsersIfRepositoryContainsOneUserEntity() {
-        User persistedUser = entityManager.persist(user);
+        User persistedUser = repository.save(user);
         List<User> users = repository.findAll();
 
         assertThat(users, hasSize(1));
@@ -57,13 +60,49 @@ class UserRepositoryTest {
                 equalTo(persistedUser.getEmail()));
     }
 
-    @Disabled
     @Test
     void shouldStoreANewUser() {
 
         User persistedUser = repository.save(user);
 
         assertThat(persistedUser.getId(), notNullValue());
+    }
+    @Test
+    void shouldFindOneUserByPartOfName() {
+        User persistedUser = repository.save(user);
+
+        final String partOfLowerCaseName = user.getFirstName().substring(0, 2).toLowerCase();
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(partOfLowerCaseName, dummyValue, "");
+
+        assertThat(users, hasSize(1));
+        assertThat(users.get(0).getEmail(), equalTo(persistedUser.getEmail()));
+    }
+    @Test
+    void shouldFindTwoUserByPartOfEmail() {
+        User user2 = new User();
+        user2.setEmail("prefix" + email);
+        user2.setAccountStatus(AccountStatus.NEW);
+
+        repository.save(user);
+        repository.save(user2);
+
+        List<User> users =  repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase("partOfLowerCaseName", dummyValue, "");
+
+        assertThat(users, hasSize(2));
+    }
+    @Test
+    void shouldFindTwoUsers() {
+        User user2 = new User();
+        user2.setFirstName("aaa");
+        user2.setLastName(user.getLastName());
+        user2.setEmail("DummyPrefix" + email);
+        user2.setAccountStatus(AccountStatus.NEW);
+
+        repository.save(user);
+        repository.save(user2);
+
+        List<User> users = repository.findByFirstNameContainingOrLastNameContainingOrEmailContainingAllIgnoreCase(user.getFirstName(), "asadasdasd", "");
+        assertThat(users, hasSize(2));
     }
 
 }
