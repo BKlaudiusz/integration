@@ -17,7 +17,13 @@ import edu.iis.mto.blog.api.request.UserRequest;
 import edu.iis.mto.blog.domain.model.AccountStatus;
 import edu.iis.mto.blog.domain.model.User;
 import edu.iis.mto.blog.domain.repository.UserRepository;
-import edu.iis.mto.blog.services.BlogService;
+import edu.iis.mto.blog.services.BlogService;import java.util.Optional;import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import edu.iis.mto.blog.domain.errors.DomainError;
 
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest
@@ -31,13 +37,21 @@ class BlogManagerTest {
 
     @Captor
     private ArgumentCaptor<User> userParam;
-
     @Test
     void creatingNewUserShouldSetAccountStatusToNEW() {
         blogService.createUser(new UserRequest("John", "Steward", "john@domain.com"));
         verify(userRepository).save(userParam.capture());
         User user = userParam.getValue();
         assertThat(user.getAccountStatus(), equalTo(AccountStatus.NEW));
+    }
+    @Test
+    void UserWithAccountStatusCONFIRMEDCanLikePost() {
+        blogService.createUser(new UserRequest("John", "Steward", "john@domain.com"));
+        verify(userRepository).save(userParam.capture());
+        User user = userParam.getValue();
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        DomainError domainException = assertThrows(DomainError.class, () -> blogService.addLikeToPost(1l, 1l));
+        assertEquals(DomainError.USER_NOT_CONFIRMED, domainException.getMessage());
     }
 
 }

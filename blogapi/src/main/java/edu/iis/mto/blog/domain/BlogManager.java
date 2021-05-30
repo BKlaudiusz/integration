@@ -42,6 +42,7 @@ public class BlogManager extends DomainService implements BlogService {
                                   .orElseThrow(domainError(DomainError.USER_NOT_FOUND));
         if(user.getAccountStatus()!=AccountStatus.CONFIRMED){
             throw new DomainError("No confirmed");
+        }
         BlogPost post = mapper.mapToEntity(postRequest);
         post.setUser(user);
         blogPostRepository.save(post);

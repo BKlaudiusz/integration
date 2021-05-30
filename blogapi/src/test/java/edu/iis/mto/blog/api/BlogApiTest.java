@@ -40,13 +40,9 @@ class BlogApiTest {
         user.setFirstName("John");
         user.setLastName("Steward");
         when(blogService.createUser(user)).thenReturn(newUserId);
-        String content = writeJson(user);
-
-        mvc.perform(post("/blog/user").contentType(MediaType.APPLICATION_JSON)
-                                      .accept(MediaType.APPLICATION_JSON)
-                                      .content(content))
-           .andExpect(status().isCreated())
-           .andExpect(content().string(writeJson(new Id(newUserId))));
+        String content = new ObjectMapper().writer().writeValueAsString(user);
+        mvc.perform(post("/blog/user").contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON).content(content))
+           .andExpect(status().isCreated()).andExpect(content().string(new ObjectMapper().writer().writeValueAsString(new Id(newUserId))));
     }
 
     private String writeJson(Object obj) throws JsonProcessingException {
